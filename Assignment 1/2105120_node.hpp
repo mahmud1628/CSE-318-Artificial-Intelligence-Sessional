@@ -49,6 +49,10 @@ class Node {
         Node * getParent() {
             return parent;
         }
+
+        pair<int, int> getBlankPosition() {
+            return blankPosition;
+        }
         // void setParent(Node * parent) {
         //     this->parent = parent;
         // }
