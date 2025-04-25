@@ -1,5 +1,5 @@
-#include<iostream>
 #include<vector>
+#include<iostream>
 using namespace std;
 
 class Node {
@@ -27,9 +27,14 @@ class Node {
             this->board = board;
             this->parent = parent;
             setBlankPosition();
+            if(parent == nullptr) {
+                this->cost = 0;
+            } else {
+                this->cost = parent->getCost() + 1;
+            }
         }
 
-        vector<vector<int>> getBoard() {
+        vector<vector<int>> getBoard() const {
             return board;
         }
 
@@ -37,9 +42,13 @@ class Node {
             return cost;
         }
 
-        void setCost(int cost) {
-            this->cost = cost;
+        int getK() {
+            return k;
         }
+
+        // void setCost(int cost) {
+        //     this->cost = cost;
+        // }
         int getPriority() {
             return priority;
         }
@@ -56,4 +65,14 @@ class Node {
         // void setParent(Node * parent) {
         //     this->parent = parent;
         // }
+
+        void printBoard() {
+            for(int i=0;i<k;i++) {
+                for(int j=0;j<k;j++) {
+                    cout << board[i][j] << " ";
+                }
+                cout << endl;
+            }
+            cout << endl;
+        }
 };
