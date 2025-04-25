@@ -1,0 +1,55 @@
+#include<iostream>
+#include<vector>
+using namespace std;
+
+class Node {
+    private:
+        int k, n;
+        vector<vector<int>> board;
+        int priority;
+        int cost;
+        Node * parent;
+        pair<int, int> blankPosition;
+        void setBlankPosition() {
+            for (int i = 0; i < k; i++) {
+                for (int j = 0; j < k; j++) {
+                    if (board[i][j] == 0) {
+                        blankPosition = make_pair(i, j);
+                        return;
+                    }
+                }
+            }
+        }
+    public:
+        Node(int k, vector<vector<int>> board, Node * parent = nullptr) {
+            this->k = k;
+            this->n = k * k - 1;
+            this->board = board;
+            this->parent = parent;
+            setBlankPosition();
+        }
+
+        vector<vector<int>> getBoard() {
+            return board;
+        }
+
+        int getCost() {
+            return cost;
+        }
+
+        void setCost(int cost) {
+            this->cost = cost;
+        }
+        int getPriority() {
+            return priority;
+        }
+        void setPriority(int priority) {
+            this->priority = priority;
+        }
+        Node * getParent() {
+            return parent;
+        }
+        // void setParent(Node * parent) {
+        //     this->parent = parent;
+        // }
+};
