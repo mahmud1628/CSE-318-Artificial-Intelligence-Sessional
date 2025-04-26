@@ -163,12 +163,12 @@ int main() {
     Node * initialNode = new Node(k, initialBoard);
 
     if(!isSolvable(initialNode)) {
-        cout << "The puzzle is not solvable" << endl;
+        cout << "Unsolvable puzzle" << endl;
         delete initialNode;
         return 0;
     }
 
-    Heuristic * heuristic = new LinearConflict();
+    Heuristic * heuristic = new EuclideanDistance();
 
     // cout << "Solvable" << endl;
 
