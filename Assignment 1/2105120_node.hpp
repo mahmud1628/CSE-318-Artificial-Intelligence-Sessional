@@ -9,7 +9,7 @@ class Node {
     private:
         int k, n;
         vector<vector<int>> board;
-        int priority;
+        double priority;
         int cost;
         Node * parent;
         pair<int, int> blankPosition;
@@ -93,10 +93,10 @@ class Node {
         // void setCost(int cost) {
         //     this->cost = cost;
         // }
-        int getPriority() {
+        double getPriority() {
             return priority;
         }
-        void setPriority(int priority) {
+        void setPriority(double priority) {
             this->priority = priority;
         }
         Node * getParent() {

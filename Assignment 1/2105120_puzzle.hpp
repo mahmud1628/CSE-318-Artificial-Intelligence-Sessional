@@ -160,9 +160,9 @@ class Puzzle {
                     }
                 }
         
-                if(expanded % 10000 == 0) {
-                    cout << "Expanded nodes: " << expanded << endl;
-                }
+                // if(expanded % 10000 == 0) { // for debugging
+                //     cout << "Expanded nodes: " << expanded << endl;
+                // }
         
                 closedList.insert(currentNode->boardToString());
             }

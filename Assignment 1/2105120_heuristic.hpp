@@ -2,6 +2,7 @@
 #define HEURISTIC_HPP
 
 #include<vector>
+#include<cmath>
 using namespace std;
 
 
@@ -13,12 +14,12 @@ class Heuristic
             return make_pair(goalRow, goalCol);
         }
     public:
-        virtual int calculateHeuristic(const vector<vector<int>> & board) = 0;
+        virtual double calculateHeuristic(const vector<vector<int>> & board) = 0;
 };
 
 class HammingDistance : public Heuristic {
     public:
-        int calculateHeuristic(const vector<vector<int>> & board) {
+        double calculateHeuristic(const vector<vector<int>> & board) {
             int hammingDistance = 0;
             int k = board.size();
             for (int i = 0; i < k; i++) {
@@ -34,7 +35,7 @@ class HammingDistance : public Heuristic {
 
 class ManhattanDistance : public Heuristic {
     public:
-        int calculateHeuristic(const vector<vector<int>> & board) {
+        double calculateHeuristic(const vector<vector<int>> & board) {
             int manhattanDistance = 0;
             int k = board.size();
             for (int i = 0; i < k; i++) {
@@ -53,15 +54,15 @@ class ManhattanDistance : public Heuristic {
 
 class EuclideanDistance : public Heuristic {
     public:
-        int calculateHeuristic(const vector<vector<int>> & board) {
-            int euclideanDistance = 0;
+        double calculateHeuristic(const vector<vector<int>> & board) {
+            double euclideanDistance = 0;
             int k = board.size();
             for (int i = 0; i < k; i++) {
                 for (int j = 0; j < k; j++) {
                     if (board[i][j] != 0) {
                         int value = board[i][j];
                         auto [goalRow, goalCol] = getGoalPosition(value, k);
-                        euclideanDistance += ((i-goalRow) * (i - goalRow) + (j - goalCol) * (j - goalCol));
+                        euclideanDistance += sqrt((i-goalRow) * (i - goalRow) + (j - goalCol) * (j - goalCol));
                     }
                 }
             }
@@ -71,7 +72,7 @@ class EuclideanDistance : public Heuristic {
 
 class LinearConflict : public Heuristic {
     private:
-        int manhattanDistance( const vector<vector<int>> & board) {
+        double manhattanDistance( const vector<vector<int>> & board) {
             int manhattanDistance = 0;
             int k = board.size();
             for (int i = 0; i < k; i++) {
@@ -86,7 +87,7 @@ class LinearConflict : public Heuristic {
             return manhattanDistance;
         }
     public:
-        int calculateHeuristic(const vector<vector<int>> & board) {
+        double calculateHeuristic(const vector<vector<int>> & board) {
             int linearConflict = 0;
             int k = board.size();
 
