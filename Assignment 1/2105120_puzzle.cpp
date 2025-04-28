@@ -1,6 +1,7 @@
 #include<iostream>
 #include<vector>
 #include<queue>
+#include<unordered_set>
 #include<set>
 #include<stack>
 #include"2105120_heuristic.hpp"
@@ -13,6 +14,16 @@ Node * getChildByMovingBlankDown(Node *);
 Node * getChildByMovingBlankLeft(Node *);
 Node * getChildByMovingBlankRight(Node *);
 Node * getChildByMovingBlankUp(Node *);
+
+string boardToString(const vector<vector<int>> & board) {
+    string result = "";
+    for (const auto & row : board) {
+        for (const auto & value : row) {
+            result += to_string(value) + ",";
+        }
+    }
+    return result;
+}
 
 struct CompareByPriority {
     bool operator()(Node * a, Node * b) {
@@ -188,13 +199,13 @@ int main(int argc, char * argv[]) {
             return 0;
         }
     } else {
-        heuristic = new ManhattanDistance();
+        heuristic = new ManhattanDistance(); // default heuristic if not provided from command line
     }
 
     initialNode->setPriority(heuristic->calculateHeuristic(initialBoard));
 
     priority_queue<Node *, vector<Node *>, CompareByPriority> openList;
-    set<Node *, ComapreByBoard> closedList;
+    set<string> closedList;
     vector<Node * > allNodes;
     allNodes.push_back(initialNode);
 
@@ -209,8 +220,8 @@ int main(int argc, char * argv[]) {
         if(isGoalState(currentNode)) {
             // write logic for printing the values now
             printResult(currentNode);
-            cout << "Explored Node Count : " << explored << endl;
-            cout << "Expanded Node Count : " << expanded << endl;
+            cout << "Number of nodes explored : " << explored << endl;
+            cout << "Number of nodes expanded : " << expanded << endl;
             for(auto node : allNodes) {
                 delete node;
             }
@@ -225,7 +236,7 @@ int main(int argc, char * argv[]) {
 
             child->setPriority(child->getCost() + heuristic->calculateHeuristic(child->getBoard()));
 
-            if(closedList.find(child) == closedList.end()) {
+            if(closedList.find(boardToString(child->getBoard())) == closedList.end()) {
                 openList.push(child);
                 explored++;
                 allNodes.push_back(child);
@@ -234,7 +245,11 @@ int main(int argc, char * argv[]) {
             }
         }
 
-        closedList.insert(currentNode);
+        if(expanded % 10000 == 0) {
+            cout << "Expanded nodes: " << expanded << endl;
+        }
+
+        closedList.insert(boardToString(currentNode->getBoard()));
     }
     
 }

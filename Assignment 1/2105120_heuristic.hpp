@@ -12,12 +12,12 @@ class Heuristic
             return make_pair(goalRow, goalCol);
         }
     public:
-        virtual int calculateHeuristic(vector<vector<int>> board) = 0;
+        virtual int calculateHeuristic(const vector<vector<int>> & board) = 0;
 };
 
 class HammingDistance : public Heuristic {
     public:
-        int calculateHeuristic(vector<vector<int>> board) {
+        int calculateHeuristic(const vector<vector<int>> & board) {
             int hammingDistance = 0;
             int k = board.size();
             for (int i = 0; i < k; i++) {
@@ -33,7 +33,7 @@ class HammingDistance : public Heuristic {
 
 class ManhattanDistance : public Heuristic {
     public:
-        int calculateHeuristic(vector<vector<int>> board) {
+        int calculateHeuristic(const vector<vector<int>> & board) {
             int manhattanDistance = 0;
             int k = board.size();
             for (int i = 0; i < k; i++) {
@@ -52,7 +52,7 @@ class ManhattanDistance : public Heuristic {
 
 class EuclideanDistance : public Heuristic {
     public:
-        int calculateHeuristic(vector<vector<int>> board) {
+        int calculateHeuristic(const vector<vector<int>> & board) {
             int euclideanDistance = 0;
             int k = board.size();
             for (int i = 0; i < k; i++) {
@@ -70,7 +70,7 @@ class EuclideanDistance : public Heuristic {
 
 class LinearConflict : public Heuristic {
     private:
-        int manhattanDistance(vector<vector<int>> board) {
+        int manhattanDistance( const vector<vector<int>> & board) {
             int manhattanDistance = 0;
             int k = board.size();
             for (int i = 0; i < k; i++) {
@@ -85,7 +85,7 @@ class LinearConflict : public Heuristic {
             return manhattanDistance;
         }
     public:
-        int calculateHeuristic(vector<vector<int>> board) {
+        int calculateHeuristic(const vector<vector<int>> & board) {
             int linearConflict = 0;
             int k = board.size();
 
