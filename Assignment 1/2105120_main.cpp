@@ -32,7 +32,7 @@ int main(int argc, char * argv[]) {
             return 0;
         }
     } else {
-        heuristic = new ManhattanDistance(); // default heuristic if not provided from command line
+        heuristic = new LinearConflict(); // default heuristic if not provided from command line
     }
 
     Puzzle * puzzle = new Puzzle(k, initialBoard, heuristic);
