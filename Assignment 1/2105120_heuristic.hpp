@@ -1,6 +1,7 @@
-#include<iostream>
+#ifndef HEURISTIC_HPP
+#define HEURISTIC_HPP
+
 #include<vector>
-#include<map>
 using namespace std;
 
 
@@ -124,3 +125,5 @@ class LinearConflict : public Heuristic {
             return linearConflict;
         }
 };
+
+#endif 

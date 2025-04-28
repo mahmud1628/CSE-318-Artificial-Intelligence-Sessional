@@ -1,3 +1,6 @@
+#ifndef NODE_HPP
+#define NODE_HPP
+
 #include<vector>
 #include<iostream>
 using namespace std;
@@ -20,6 +23,47 @@ class Node {
                 }
             }
         }
+
+        Node * getChildByMovingBlankUp() {
+            auto [blankRow, blankCol] = this->getBlankPosition();
+            if(blankRow == 0) return nullptr;
+        
+            vector<vector<int>> newBoard = this->getBoard();
+            swap(newBoard[blankRow][blankCol], newBoard[blankRow-1][blankCol]);
+            Node * newNode = new Node(this->getK(),newBoard, this);
+            return newNode;
+        }
+        
+        Node * getChildByMovingBlankDown() {
+            auto [blankRow, blankCol] = this->getBlankPosition();
+            if(blankRow == this->getK() - 1) return nullptr;
+        
+            vector<vector<int>> newBoard = this->getBoard();
+            swap(newBoard[blankRow][blankCol], newBoard[blankRow+1][blankCol]);
+            Node * newNode = new Node(this->getK(),newBoard, this);
+            return newNode;
+        }
+        
+        Node * getChildByMovingBlankLeft() {
+            auto [blankRow, blankCol] = this->getBlankPosition();
+            if(blankCol == 0) return nullptr;
+        
+            vector<vector<int>> newBoard = this->getBoard();
+            swap(newBoard[blankRow][blankCol], newBoard[blankRow][blankCol-1]);
+            Node * newNode = new Node(this->getK(),newBoard, this);
+            return newNode;
+        }
+        
+        Node * getChildByMovingBlankRight() {
+            auto [blankRow, blankCol] = this->getBlankPosition();
+            if(blankCol == this->getK() - 1) return nullptr;
+        
+            vector<vector<int>> newBoard = this->getBoard();
+            swap(newBoard[blankRow][blankCol], newBoard[blankRow][blankCol + 1]);
+            Node * newNode = new Node(this->getK(),newBoard, this);
+            return newNode;
+        }
+
     public:
         Node(int k, vector<vector<int>> board, Node * parent = nullptr) {
             this->k = k;
@@ -75,4 +119,37 @@ class Node {
             }
             cout << endl;
         }
+        
+        vector<Node *> getChildsOfCurrentNode() {
+            vector<Node *> childs;
+        
+            childs.push_back(this->getChildByMovingBlankUp());
+            childs.push_back(this->getChildByMovingBlankDown());
+            childs.push_back(this->getChildByMovingBlankLeft());
+            childs.push_back(this->getChildByMovingBlankRight());
+        
+            return childs;
+        }
+
+        string boardToString() {
+            string result = "";
+            for (const auto & row : board) {
+                for (const auto & value : row) {
+                    result += to_string(value) + ",";
+                }
+            }
+            return result;
+        }
+
+        bool isGoalState() {
+            for(int i=0;i<k;i++) {
+                for(int j=0;j<k;j++) {
+                    if(board[i][j] == 0) continue;
+                    if(board[i][j] != i * k + j + 1 ) return false;
+                }
+            }
+            return true;
+        }
 };
+
+#endif 
