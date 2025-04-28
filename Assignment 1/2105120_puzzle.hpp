@@ -118,7 +118,7 @@ class Puzzle {
             initialNode->setPriority(heuristic->calculateHeuristic(initialBoard));
         
             priority_queue<Node *, vector<Node *>, CompareByPriority> openList;
-            map<string, int> closedList;
+            set<string> closedList;
             vector<Node * > allNodes;
             allNodes.push_back(initialNode);
         
@@ -129,7 +129,6 @@ class Puzzle {
                 Node * currentNode = openList.top();
                 openList.pop();
                 expanded++;
-                closedList[currentNode->boardToString()] = currentNode->getCost();
         
                 if(currentNode->isGoalState()) {
                     // write logic for printing the values now
@@ -153,11 +152,10 @@ class Puzzle {
         
                     child->setPriority(child->getCost() + heuristic->calculateHeuristic(child->getBoard()));
         
-                    if(closedList.find(child->boardToString()) == closedList.end() || child->getCost() < closedList[child->boardToString()]) {
+                    if(closedList.find(child->boardToString()) == closedList.end()) {
                         openList.push(child);
                         explored++;
                         allNodes.push_back(child);
-                        closedList[child->boardToString()] = child->getCost();
                     } else {
                         delete child;
                     }
@@ -167,7 +165,7 @@ class Puzzle {
                 //     cout << "Expanded nodes: " << expanded << endl;
                 // }
         
-                // closedList.insert(currentNode->boardToString());
+                closedList.insert(currentNode->boardToString());
             }
             return -1;
         }
