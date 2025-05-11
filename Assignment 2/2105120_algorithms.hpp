@@ -21,8 +21,8 @@ int calculateCutWeight(const unordered_set<int> & partition_x, const unordered_s
 }
 
 
-double RandomizedHeuristicMaxCut(int n, const vector<pair<pair<int,int>, int>> & edges, int iterations) {
-    double totalCutWeight = 0; // Total weight of the cut
+int RandomizedHeuristicMaxCut(int n, const vector<pair<pair<int,int>, int>> & edges, int iterations) {
+    int totalCutWeight = 0; // Total weight of the cut
 
     random_device rd;
     mt19937 gen(rd());
@@ -39,7 +39,7 @@ double RandomizedHeuristicMaxCut(int n, const vector<pair<pair<int,int>, int>> &
             else y.insert(j);
         }
 
-        double cut_weight = 0; // Weight of the current cut
+        int cut_weight = 0; // Weight of the current cut
 
         for (auto & edge : edges) {
             int u = edge.first.first;
@@ -185,11 +185,11 @@ void LocalSearchMaxCut(int n, const vector<vector<int>> & weights, unordered_set
     while(improved) {
         improved = false;
 
-        int delta_max = 0;
+        int delta_max = numeric_limits<int>::min();
         int best_vertex = -1;
         bool best_partition = false; // true for x, false for y
 
-        for (int v = 1; v <=n ; v++) {
+        for (int v = 1; v <= n ; v++) {
             bool vertex_in_x = partition_x.find(v) != partition_x.end();
             
             int sigma_same = 0, sigma_other = 0;
@@ -202,7 +202,7 @@ void LocalSearchMaxCut(int n, const vector<vector<int>> & weights, unordered_set
                 for (auto u : partition_x) sigma_other += weights[v-1][u-1];
             }
 
-            int delta = sigma_other - sigma_same;
+            int delta = sigma_same - sigma_other;
 
             if ( delta > delta_max) {
                 delta_max = delta;
@@ -212,7 +212,7 @@ void LocalSearchMaxCut(int n, const vector<vector<int>> & weights, unordered_set
             
         }
 
-        if(best_vertex != -1) {
+        if(best_vertex != -1 && delta_max > 0) {
             if (best_partition) {
                 partition_x.insert(best_vertex);
                 partition_y.erase(best_vertex);

@@ -1,0 +1,2 @@
+Greedy Max Cut: 10954
+Cut weight: 11342
