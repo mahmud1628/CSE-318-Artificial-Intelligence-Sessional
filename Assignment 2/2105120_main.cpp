@@ -31,11 +31,15 @@ int main() {
     }
 
     // int average_cut_weight = RandomizedHeuristicMaxCut(n, edges, n);
-    pair<unordered_set<int>, unordered_set<int>> partition = GreedyMaxCut(n, weights);
+    // pair<unordered_set<int>, unordered_set<int>> partition = SemiGreedyMaxCut(n, weights,0.5);
 
+    // int cut_weight = calculateCutWeight(partition.first, partition.second, weights);
+    // cout << "Greedy Max Cut: " << cut_weight << endl;
+    // LocalSearchMaxCut(n, weights, partition.first, partition.second);
+    // cut_weight = calculateCutWeight(partition.first, partition.second, weights);
+    // cout << "Cut weight: " << cut_weight << endl;
+
+    pair<unordered_set<int>, unordered_set<int>> partition = GRASP(n, weights, 100, 0.5);
     int cut_weight = calculateCutWeight(partition.first, partition.second, weights);
-    cout << "Greedy Max Cut: " << cut_weight << endl;
-    LocalSearchMaxCut(n, weights, partition.first, partition.second);
-    cut_weight = calculateCutWeight(partition.first, partition.second, weights);
-    cout << "Cut weight: " << cut_weight << endl;
+    cout << "GRASP Max Cut: " << cut_weight << endl;
 }

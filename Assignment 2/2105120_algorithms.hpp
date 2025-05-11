@@ -166,8 +166,8 @@ pair<unordered_set<int>, unordered_set<int>> SemiGreedyMaxCut(int n, const vecto
         remaining_vertices--;
         int weight_x = 0, weight_y = 0;
 
-        for (auto u : partition_x) weight_x += weights[selected_vertex-1][u-1];
-        for (auto u : partition_y) weight_y += weights[selected_vertex-1][u-1];
+        for (auto u : partition_y) weight_x += weights[selected_vertex-1][u-1];
+        for (auto u : partition_x) weight_y += weights[selected_vertex-1][u-1];
 
         if (weight_x > weight_y) partition_x.insert(selected_vertex);
         else partition_y.insert(selected_vertex);

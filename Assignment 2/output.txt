@@ -1,2 +1,1 @@
-Greedy Max Cut: 10954
-Cut weight: 11342
+GRASP Max Cut: 11446
