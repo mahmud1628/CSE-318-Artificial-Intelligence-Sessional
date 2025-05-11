@@ -22,31 +22,39 @@ int calculateCutWeight(const unordered_set<int> & partition_x, const unordered_s
 
 
 double RandomizedHeuristicMaxCut(int n, const vector<pair<pair<int,int>, int>> & edges, int iterations) {
-    srand(time(0)); // Seed for random number generation
     double totalCutWeight = 0; // Total weight of the cut
 
-    for (int i= 0; i< iterations ; i++ ) {
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> dis(1, n);
+
+
+    for (int i= 0; i < iterations ; i++ ) {
         unordered_set<int> x, y;
 
         for (int j = 1; j <= n; j++) {
             // Randomly assign vertices to partition x or y
-            if (rand() % 2 == 0) x.insert(j); 
+            int random_partition = dis(gen) % 2;
+            if(random_partition == 0) x.insert(j);
             else y.insert(j);
         }
 
-        double cutWeight = 0; // Weight of the current cut
+        double cut_weight = 0; // Weight of the current cut
 
         for (auto & edge : edges) {
             int u = edge.first.first;
             int v = edge.first.second;
             int weight = edge.second;
 
-            // Check if the edge is cut
-            if ((x.find(u) != x.end() && y.find(v) != y.end()) || (y.find(u) != y.end() && x.find(v) != x.end())) {
-                cutWeight += weight;
-            }
+            bool u_in_x = x.find(u) != x.end();
+            bool v_in_x = x.find(v) != x.end();
+            bool u_in_y = y.find(u) != y.end();
+            bool v_in_y = y.find(v) != y.end();
+            bool is_cut = u_in_x && v_in_y || u_in_y && v_in_x; // Check if the edge is cut
+
+            if (is_cut) cut_weight += weight;
         }
-        totalCutWeight = totalCutWeight + cutWeight;
+        totalCutWeight = totalCutWeight + cut_weight;
     }
 
     return totalCutWeight / iterations; // Return the average cut weight
@@ -228,13 +236,13 @@ pair<unordered_set<int>, unordered_set<int>> GRASP(int n, const vector<vector<in
     for(int i = 1 ; i < iterations; i++) {
         auto partition = SemiGreedyMaxCut(n, weights, alpha);
         LocalSearchMaxCut(n, weights, partition.first, partition.second);
-
         int cut_weight = calculateCutWeight(partition.first, partition.second, weights);
+
         if (cut_weight > best_cut_weight) {
             best_cut_weight = cut_weight;
             best_partition = partition;
         }
     }
-
+    // Return the best partition found
     return best_partition;
 }
