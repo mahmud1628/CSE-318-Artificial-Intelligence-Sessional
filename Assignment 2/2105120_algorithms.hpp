@@ -21,7 +21,7 @@ int calculateCutWeight(const unordered_set<int> & partition_x, const unordered_s
 }
 
 
-int RandomizedHeuristicMaxCut(int n, const vector<pair<pair<int,int>, int>> & edges, int iterations) {
+int RandomizedHeuristicMaxCut(int n, const vector<pair<pair<int,int>, int>> & edges) {
     int totalCutWeight = 0; // Total weight of the cut
 
     random_device rd;
@@ -29,7 +29,7 @@ int RandomizedHeuristicMaxCut(int n, const vector<pair<pair<int,int>, int>> & ed
     uniform_int_distribution<> dis(1, n);
 
 
-    for (int i= 0; i < iterations ; i++ ) {
+    for (int i= 0; i < n; i++ ) {
         unordered_set<int> x, y;
 
         for (int j = 1; j <= n; j++) {
@@ -57,7 +57,7 @@ int RandomizedHeuristicMaxCut(int n, const vector<pair<pair<int,int>, int>> & ed
         totalCutWeight = totalCutWeight + cut_weight;
     }
 
-    return totalCutWeight / iterations; // Return the average cut weight
+    return totalCutWeight / n; // Return the average cut weight
 }
 
 

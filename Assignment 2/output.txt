@@ -1,1 +1,0 @@
-GRASP Max Cut: 11446
