@@ -179,11 +179,13 @@ pair<unordered_set<int>, unordered_set<int>> SemiGreedyMaxCut(int n, const vecto
 
 
 
-void LocalSearchMaxCut(int n, const vector<vector<int>> & weights, unordered_set<int> & partition_x, unordered_set<int> & partition_y) {
+int LocalSearchMaxCut(int n, const vector<vector<int>> & weights, unordered_set<int> & partition_x, unordered_set<int> & partition_y) {
     bool improved = true;
+    int iterations = 0;
 
     while(improved) {
         improved = false;
+        iterations++;
 
         int delta_max = numeric_limits<int>::min();
         int best_vertex = -1;
@@ -225,6 +227,7 @@ void LocalSearchMaxCut(int n, const vector<vector<int>> & weights, unordered_set
             improved = false; // No improvement found
         }
     }
+    return iterations; // Return the number of iterations
 }
 
 
