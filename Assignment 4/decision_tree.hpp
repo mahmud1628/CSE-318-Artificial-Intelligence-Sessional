@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <unordered_set>
 using namespace std;
 
 struct DataPoint
@@ -28,6 +29,7 @@ class DecisionTree
     double entropy(const vector<DataPoint> & data);
     double information_gain(const vector<DataPoint> & data, const string & attribute);
     double information_gain_ratio(const vector<DataPoint> & data, const string & attribute);
+    double normalized_weighted_information_gain(const vector<DataPoint> & data, const string & attribute);
 
     public:
     DecisionTree(int max_depth = 5, string selection_strategy = "ig") : root(nullptr), max_depth(max_depth) {
@@ -38,6 +40,10 @@ class DecisionTree
         else if(selection_strategy == "igr")
         {
             attribute_selection_strategy = &DecisionTree::information_gain_ratio;
+        }
+        else if(selection_strategy == "nwig")
+        {
+            attribute_selection_strategy = &DecisionTree::normalized_weighted_information_gain;
         }
         else
         {
@@ -172,6 +178,22 @@ double DecisionTree::information_gain_ratio(const vector<DataPoint> & data, cons
     }
     if(intrinsic_value == 0) return 0.0; // Avoid division by zero
     return gain / intrinsic_value; // Return information gain ratio
+}
+
+double DecisionTree::normalized_weighted_information_gain(const vector<DataPoint> & data, const string & attribute)
+{
+    double information_gain_value = information_gain(data, attribute);
+    int k; // Number of unique values for the attribute
+    unordered_set<string> unique_values;
+    for(const auto & point : data)
+    {
+        unique_values.insert(point.attribute_values.at(attribute));
+    }
+    k = unique_values.size();
+    double normalized_gain = 1 - (k - 1) / static_cast<double>(data.size());
+    normalized_gain = information_gain_value * normalized_gain;
+    normalized_gain = normalized_gain / log2(k + 1);
+    return normalized_gain;
 }
 
 
