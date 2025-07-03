@@ -17,6 +17,8 @@ class DecisionTree
 {
     Node * root; 
     int max_depth;
+    // Function pointer for attribute selection strategy
+    double (DecisionTree::*attribute_selection_strategy)(const vector<DataPoint> &, const string &);
 
     Node * build_tree(const vector<DataPoint> & data, const vector<string> & attributes, int depth);
     string get_best_attribute(const vector<DataPoint> & data, const vector<string> & attributes);
@@ -25,9 +27,24 @@ class DecisionTree
     // selection criteria
     double entropy(const vector<DataPoint> & data);
     double information_gain(const vector<DataPoint> & data, const string & attribute);
+    double information_gain_ratio(const vector<DataPoint> & data, const string & attribute);
 
     public:
-    DecisionTree(int max_depth = 5) : root(nullptr), max_depth(max_depth) {}
+    DecisionTree(int max_depth = 5, string selection_strategy = "ig") : root(nullptr), max_depth(max_depth) {
+        if(selection_strategy == "ig")
+        {
+            attribute_selection_strategy = &DecisionTree::information_gain;
+        }
+        else if(selection_strategy == "igr")
+        {
+            attribute_selection_strategy = &DecisionTree::information_gain_ratio;
+        }
+        else
+        {
+            cerr << "Error: Unsupported attribute selection strategy." << endl;
+            attribute_selection_strategy = nullptr; // default to nullptr if unsupported
+        }
+    }
     ~DecisionTree() 
     {
         delete root; // delete the root node, which recursively deletes all child nodes
@@ -71,14 +88,13 @@ Node * DecisionTree::build_tree(const vector<DataPoint> & data, const vector<str
     }
 }
 
-
 string DecisionTree::get_best_attribute(const vector<DataPoint> & data, const vector<string> & attributes)
 {
     double best_value = -1.0;
     string best_attribute;
     for(const auto & attribute : attributes)
     {
-        double value = information_gain(data, attribute);
+        double value = (this->*attribute_selection_strategy)(data, attribute);
         if(value > best_value)
         {
             best_value = value;
@@ -128,7 +144,34 @@ double DecisionTree::information_gain(const vector<DataPoint> & data, const stri
         double subset_entropy = entropy(pair.second);
         weighted_entropy += (static_cast<double>(pair.second.size()) / total_count) * subset_entropy;
     }
-    return total_entropy - weighted_entropy;;
+    return total_entropy - weighted_entropy;
+}
+
+double DecisionTree::information_gain_ratio(const vector<DataPoint> & data, const string & attribute)
+{
+    double total_entropy = entropy(data);
+    unordered_map<string, vector<DataPoint>> subsets;
+    for(const auto & point : data)
+    {
+        subsets[point.attribute_values.at(attribute)].push_back(point);
+    }
+    double weighted_entropy = 0.0;
+    int total_count = data.size();
+    for(const auto & pair : subsets)
+    {
+        double subset_entropy = entropy(pair.second);
+        weighted_entropy += (static_cast<double>(pair.second.size()) / total_count) * subset_entropy;
+    }
+    double gain = total_entropy - weighted_entropy;
+    // Calculate intrinsic value
+    double intrinsic_value = 0.0;
+    for(const auto & pair : subsets)
+    {
+        double size_ratio = static_cast<double>(pair.second.size()) / total_count;
+        intrinsic_value -= size_ratio * log2(size_ratio);
+    }
+    if(intrinsic_value == 0) return 0.0; // Avoid division by zero
+    return gain / intrinsic_value; // Return information gain ratio
 }
 
 
