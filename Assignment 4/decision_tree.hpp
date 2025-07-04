@@ -52,6 +52,7 @@ class DecisionTree
     }
 
     bool train(const vector<DataPoint> & data, const vector<string> & attrributes);
+    string predict(const DataPoint & point);
     void print();
 };
 
@@ -127,6 +128,30 @@ Node * DecisionTree::build_tree(const vector<DataPoint> & data, const vector<str
     }
 
     return node;
+}
+
+string DecisionTree::predict(const DataPoint & point)
+{
+    if(root == nullptr)
+    {
+        cerr << "Error: Decision tree has not been trained." << endl;
+        return ""; // Return empty string if tree is not trained
+    }
+    Node * current_node = root;
+    while(!current_node->is_leaf)
+    {
+        string attribute_value = point.attribute_values.at(current_node->attribute_name);
+        if(current_node->children.find(attribute_value) != current_node->children.end())
+        {
+            current_node = current_node->children[attribute_value]; // Move to the child node corresponding to the attribute value
+        }
+        else
+        {
+            cerr << "Warning: Attribute value '" << attribute_value << "' not found in the decision tree." << endl;
+            return ""; // Return empty string if attribute value is not found
+        }
+    }
+    return current_node->predicted_class; // Return the predicted class label at the leaf node
 }
 
 bool DecisionTree::is_pure_node(const vector<DataPoint> & data)
