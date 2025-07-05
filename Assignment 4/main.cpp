@@ -92,10 +92,15 @@ void split_data(const vector<DataPoint> & data, vector<DataPoint> & training_dat
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
     int max_depth = 5;
-    string selection_strategy = "ig"; // Default selection strategy
+    string selection_strategy = "ig";
+    if(argc == 3)
+    {
+        max_depth = stoi(argv[1]);
+        selection_strategy = argv[2];
+    }
     vector<DataPoint> data;
     vector<string> attributes;
     string class_label_name;
@@ -111,6 +116,43 @@ int main()
     // cout << training_data.size() << " training data points." << endl;
     // cout << test_data.size() << " test data points." << endl;
 
-    // tree.train(training_data, attributes);
-    // tree.print();
+    tree.train(training_data, attributes);
+    tree.print();
+
+    int correct_predictions_with_training_data = 0;
+    for(const auto & point : training_data)
+    {
+        string predicted_class = tree.predict(point);
+        if(predicted_class == point.class_label)
+        {
+            correct_predictions_with_training_data++;   
+        }
+    }
+
+    double training_accuracy = static_cast<double>(correct_predictions_with_training_data) / training_data.size() * 100.0;
+    cout << "Training accuracy: " << training_accuracy << "%" << endl;
+    int correct_predictions_with_test_data = 0;
+    for(const auto & point : test_data)
+    {
+        string predicted_class = tree.predict(point);
+        if(predicted_class == point.class_label)
+        {
+            correct_predictions_with_test_data++;
+        }
+    }
+    double test_accuracy = static_cast<double>(correct_predictions_with_test_data) / test_data.size() * 100.0;
+    cout << "Test accuracy: " << test_accuracy << "%" << endl;
+
+    ofstream output_file("Iris_results.csv", ios::app);
+    if(output_file.is_open())
+    {
+        output_file << max_depth << ", " << selection_strategy << ", "
+                    << training_accuracy << ", " << test_accuracy << endl;
+        output_file.close();   
+    }
+    else
+    {
+        cerr << "Error: Unable to open output file." << endl;
+    }
+    return 0;
 }
