@@ -22,6 +22,36 @@ string trim(const string & str)
     return str.substr(first, last - first + 1);
 }
 
+void read_adult_file(vector<DataPoint> & data, vector<string> & attributes, string & class_label_name)
+{
+    ifstream input_file(ADULT_FILE);
+    string line, word;
+    for(int i = 0; i < 14; i++) // Read the first line for attributes
+    {
+        attributes.push_back("Attribute" + to_string(i + 1));
+    }
+    class_label_name = "Class";
+    int attribute_size = attributes.size();
+    while(getline(input_file, line))
+    {
+        if(line.empty()) continue;
+        stringstream ss(line);
+        DataPoint point;
+        int index = 0;
+        while(getline(ss, word, ',') && index < attribute_size)
+        {
+            word = trim(word);
+            point.attribute_values[attributes[index]] = word;
+            index++;
+        }
+        getline(ss, word, ','); // Read the class label
+        point.class_label = trim(word);
+
+        data.push_back(point);
+    }
+    input_file.close();
+}
+
 
 void read_iris_file(vector<DataPoint> & data, vector<string> & attributes, string & class_label_name)
 {
@@ -106,7 +136,8 @@ int main(int argc, char *argv[])
     string class_label_name;
 
     // Read the Iris dataset
-    read_iris_file(data, attributes, class_label_name);
+    // read_iris_file(data, attributes, class_label_name);
+    read_adult_file(data, attributes, class_label_name);
 
     DecisionTree tree(max_depth, selection_strategy);
 
