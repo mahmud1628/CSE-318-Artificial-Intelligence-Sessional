@@ -27,6 +27,7 @@ class DecisionTree
 {
     Node * root;
     int max_depth;
+    bool pruning_enabled = true; // whether to enable pruning or not
     // Function pointer for attribute selection strategy
     double (DecisionTree::*attribute_selection_strategy)(const vector<DataPoint> &, const string &);
 
@@ -56,6 +57,10 @@ class DecisionTree
         {
             cerr << "Error: Unsupported attribute selection strategy." << endl;
             attribute_selection_strategy = nullptr; // default to nullptr if unsupported
+        }
+        if(max_depth == 0) 
+        {
+            pruning_enabled = false;
         }
     }
     ~DecisionTree() 
@@ -96,7 +101,7 @@ Node * DecisionTree::build_tree(const vector<DataPoint> & data, const vector<str
         string majority_class_label = get_majority_class(data);
         return new Node(true, "", majority_class_label, depth);
     }
-    if(depth == this->max_depth) // maximum depth reached
+    if(pruning_enabled && depth == this->max_depth) // maximum depth reached
     {
         string majority_class_label = get_majority_class(data);
         return new Node(true, "", majority_class_label, depth);
