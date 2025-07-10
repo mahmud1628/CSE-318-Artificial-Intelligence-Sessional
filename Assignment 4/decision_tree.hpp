@@ -419,7 +419,17 @@ double DecisionTree::normalized_weighted_information_gain(const vector<DataPoint
 {
     if(attribute_value_types[attribute] == NUMERICAL)
     {
-        return information_gain(data, attribute); // For now, using information gain directly for simplicity.
+        auto [value, gain] = get_best_split_value_and_gain(data, attribute);
+        unordered_set<string> unique_values;
+        for(const auto & point : data)
+        {
+            unique_values.insert(point.attribute_values.at(attribute));
+        }
+        int k = unique_values.size();
+        double normalized_gain = 1 - (k - 1) / static_cast<double>(data.size());
+        normalized_gain = gain * normalized_gain;
+        normalized_gain = normalized_gain / log2(k + 1);
+        return normalized_gain;
     }
     double information_gain_value = information_gain(data, attribute);
     int k; // Number of unique values for the attribute
