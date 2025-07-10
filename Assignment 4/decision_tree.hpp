@@ -6,8 +6,17 @@
 #include <vector>
 #include <cmath>
 #include <unordered_set>
+#include <algorithm>
+#include <cmath>
+#include <limits>
 using namespace std;
 
+enum AttributeType {
+    NUMERICAL, 
+    CATEGORICAL 
+};
+
+extern unordered_map<string, AttributeType> attribute_value_types; // declared in main.cpp
 struct DataPoint
 {
     string class_label;
@@ -16,7 +25,7 @@ struct DataPoint
 
 class DecisionTree
 {
-    Node * root; 
+    Node * root;
     int max_depth;
     // Function pointer for attribute selection strategy
     double (DecisionTree::*attribute_selection_strategy)(const vector<DataPoint> &, const string &);
@@ -35,6 +44,9 @@ class DecisionTree
     double information_gain_ratio(const vector<DataPoint> & data, const string & attribute);
     double normalized_weighted_information_gain(const vector<DataPoint> & data, const string & attribute);
 
+    // for numeric attributes
+    double partition_entropy(const unordered_map<string, int> & partition, double total_size);
+    pair<double, double> get_best_split_value_and_gain(const vector<DataPoint> & data, const string & attribute);
     public:
     DecisionTree(int max_depth = 5, string selection_strategy = "ig") : root(nullptr), max_depth(max_depth) {
         if(selection_strategy == "ig") attribute_selection_strategy = &DecisionTree::information_gain;
@@ -75,9 +87,14 @@ bool DecisionTree::train(const vector<DataPoint> & data, const vector<string> & 
 
 Node * DecisionTree::build_tree(const vector<DataPoint> & data, const vector<string> & attributes, int depth)
 {
-    if(data.empty() || attributes.empty())
+    if(data.empty())
     {
         return nullptr; // No data to build the tree
+    }
+    if(attributes.empty())
+    {
+        string majority_class_label = get_majority_class(data);
+        return new Node(true, "", majority_class_label, depth);
     }
     if(depth == this->max_depth) // maximum depth reached
     {
@@ -91,7 +108,6 @@ Node * DecisionTree::build_tree(const vector<DataPoint> & data, const vector<str
         return new Node(true, "", data[0].class_label, depth);
     }
 
-    // find the best attribute to split on
     string best_attribute = get_best_attribute(data, attributes);
     if(best_attribute.empty()) // no valid attribute found, return majority class
     {
@@ -100,6 +116,52 @@ Node * DecisionTree::build_tree(const vector<DataPoint> & data, const vector<str
     }
 
     Node * node = new Node(false, best_attribute, "", depth);
+
+    if (attribute_value_types[best_attribute] == NUMERICAL)
+    {
+        auto [split_value, split_gain] = get_best_split_value_and_gain(data, best_attribute);
+
+        if (split_gain <= 1e-10) // if gain is too small, negligible, return majority class
+        {
+            string majority_class_label = get_majority_class(data);
+            return new Node(true, "", majority_class_label, depth);
+        }
+
+        vector<DataPoint> left, right;
+        for (const auto & point : data)
+        {
+            try
+            {
+                double attribute_value = stod(point.attribute_values.at(best_attribute));
+                (attribute_value < split_value ? left : right).push_back(point);
+            }
+            catch (...) {} // skip points with invalid numeric values
+        }
+
+        if (left.empty() || right.empty())
+        {
+            string majority_class = get_majority_class(data);
+            return new Node(true, "", majority_class, depth);
+        }
+
+        vector<string> remaining_attributes;
+        for(const auto & attr : attributes)
+        {
+            if(attr != best_attribute)
+            {
+                remaining_attributes.push_back(attr);
+            }
+        }
+
+        string left_child = "<"  + to_string(split_value);
+        string right_child = ">=" + to_string(split_value);
+
+        node->children[left_child]  = build_tree(left , remaining_attributes, depth + 1);
+        node->children[right_child]  = build_tree(right, remaining_attributes, depth + 1);
+        return node;
+    }
+
+    // categorical attribute
     unordered_set<string> attribute_values;
     for(const auto & point : data)
     {
@@ -140,15 +202,62 @@ string DecisionTree::predict(const DataPoint & point)
     Node * current_node = root;
     while(!current_node->is_leaf)
     {
-        string attribute_value = point.attribute_values.at(current_node->attribute_name);
-        if(current_node->children.find(attribute_value) != current_node->children.end())
+        const string & attribute_name = current_node->attribute_name;
+
+        if (attribute_value_types[attribute_name] == NUMERICAL)
         {
-            current_node = current_node->children[attribute_value]; // Move to the child node corresponding to the attribute value
+            // get split threshold from the node's children
+            double split_value = numeric_limits<double>::quiet_NaN();
+            for (const auto & value_node_pair : current_node->children)
+            {
+                size_t pos = value_node_pair.first.find_first_of("0123456789");
+                if (pos != string::npos) 
+                { 
+                    split_value = stod(value_node_pair.first.substr(pos)); 
+                    break; 
+                }
+            }
+            if (isnan(split_value)) // not a number
+            {
+                return "";
+            }
+
+            double attribute_value = 0.0;
+            try { 
+                attribute_value = stod(point.attribute_values.at(attribute_name)); 
+            }
+            catch (...) { 
+                return ""; 
+            }
+
+            string child_indicator; // indicates whether to go to left or right child
+            if(attribute_value < split_value)
+            {
+                child_indicator = "<"  + to_string(split_value);
+            }
+            else 
+            {
+                child_indicator = ">=" + to_string(split_value);
+            }
+            unordered_map<string, Node*>::const_iterator it = current_node->children.find(child_indicator);
+            if (it == current_node->children.end()) 
+            {
+                return "";
+            }
+            current_node = it->second;
         }
-        else
+        else // categorical attribute, previous code only wrapped in a else block
         {
-            cerr << "Warning: Attribute value '" << attribute_value << "' not found in the decision tree." << endl;
-            return ""; // Return empty string if attribute value is not found
+            string attribute_value = point.attribute_values.at(attribute_name);
+            if(current_node->children.find(attribute_value) != current_node->children.end())
+            {
+                current_node = current_node->children[attribute_value]; // Move to the child node corresponding to the attribute value
+            }
+            else
+            {
+                cerr << "Warning: Attribute value '" << attribute_value << "' not found in the decision tree." << endl;
+                return ""; // Return empty string if attribute value is not found
+            }
         }
     }
     return current_node->predicted_class; // Return the predicted class label at the leaf node
@@ -235,6 +344,14 @@ double DecisionTree::entropy(const vector<DataPoint> & data)
 double DecisionTree::information_gain(const vector<DataPoint> & data, const string & attribute)
 {
     double total_entropy = entropy(data);
+
+    if (attribute_value_types[attribute] == NUMERICAL)
+    {
+        auto [value, gain] = get_best_split_value_and_gain(data, attribute);
+        return gain;
+    }
+
+    // categorical, previous code   
     unordered_map<string, vector<DataPoint>> subsets;
     for(const auto & point : data)
     {
@@ -252,6 +369,10 @@ double DecisionTree::information_gain(const vector<DataPoint> & data, const stri
 
 double DecisionTree::information_gain_ratio(const vector<DataPoint> & data, const string & attribute)
 {
+    if(attribute_value_types[attribute] == NUMERICAL)
+    {
+        return information_gain(data, attribute); // For now, using information gain directly for simplicity.
+    }
     double total_entropy = entropy(data);
     unordered_map<string, vector<DataPoint>> subsets;
     for(const auto & point : data)
@@ -279,6 +400,10 @@ double DecisionTree::information_gain_ratio(const vector<DataPoint> & data, cons
 
 double DecisionTree::normalized_weighted_information_gain(const vector<DataPoint> & data, const string & attribute)
 {
+    if(attribute_value_types[attribute] == NUMERICAL)
+    {
+        return information_gain(data, attribute); // For now, using information gain directly for simplicity.
+    }
     double information_gain_value = information_gain(data, attribute);
     int k; // Number of unique values for the attribute
     unordered_set<string> unique_values;
@@ -291,6 +416,80 @@ double DecisionTree::normalized_weighted_information_gain(const vector<DataPoint
     normalized_gain = information_gain_value * normalized_gain;
     normalized_gain = normalized_gain / log2(k + 1);
     return normalized_gain;
+}
+
+// for numeric attributes
+
+double DecisionTree::partition_entropy(const unordered_map<string, int> & class_counts, double total_size)
+{
+    if (total_size == 0) // avoid division by zero
+    {
+        return 0.0;
+    }
+    double entropy_value = 0.0;
+    for (const auto & pair : class_counts)
+    {
+        double probability = pair.second / total_size;
+        entropy_value -= probability * log2(probability);
+    }
+    return entropy_value;   
+}
+
+pair<double, double> DecisionTree::get_best_split_value_and_gain(const vector<DataPoint> & data, const string & attribute)
+{
+    vector<pair<double, string>> rows; // value - class label pairs
+    for (const auto & point : data)
+    {
+        try { 
+            rows.push_back({stod(point.attribute_values.at(attribute)), point.class_label}); 
+        }
+        catch (...) {}
+    }
+
+    if (rows.size() < 2) 
+    { 
+        return {0.0, 0.0}; // Not enough data to split
+    }
+
+    sort(rows.begin(), rows.end(), [](const pair<double, string> & a, const pair<double, string> & b){ return a.first < b.first; });
+
+
+    unordered_map<string, int> right_class_counts; // counts of class labels in the right partition
+    unordered_map<string, int> left_class_counts; // counts of class labels in the left partition
+    for (const auto & row : rows) // initially all records are in the right partition
+    {
+        right_class_counts[row.second]++;
+    }
+
+    const double total_entropy = partition_entropy(right_class_counts, rows.size());
+
+    double best_gain = -1.0, best_split_value = rows.front().first;
+
+    for (size_t i = 0; i < rows.size() - 1; i++)
+    {
+        /* move record i → left */
+        left_class_counts[rows[i].second]++;
+        right_class_counts[rows[i].second]--;
+        if (right_class_counts[rows[i].second] == 0)
+        {
+            right_class_counts.erase(rows[i].second);
+        }
+
+        if (rows[i].second == rows[i+1].second) continue;  // no class change
+
+        double split_value = (rows[i].first + rows[i+1].first) / 2.0;
+        double number_of_left_classes = i + 1, number_of_right_classes = rows.size() - number_of_left_classes;
+        double gain = total_entropy - (number_of_left_classes / rows.size()) * partition_entropy(left_class_counts , number_of_left_classes) - (number_of_right_classes / rows.size()) * partition_entropy(right_class_counts, number_of_right_classes);
+
+        if (gain > best_gain)
+        {
+            best_split_value = split_value;
+            best_gain = gain;
+        }
+    }
+
+    best_gain = max(0.0, best_gain);
+    return {best_split_value, best_gain};
 }
 
 // print
