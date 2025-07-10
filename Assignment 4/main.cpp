@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
         read_adult_file(data, attributes, class_label_name, attribute_value_types);
     }
 
-    DecisionTree tree(max_depth, selection_strategy);
+    DecisionTree tree(max_depth, selection_strategy, attribute_value_types);
 
     vector<DataPoint> training_data, test_data;
     split_data(data, training_data, test_data);
