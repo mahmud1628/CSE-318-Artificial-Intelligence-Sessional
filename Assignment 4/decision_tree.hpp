@@ -15,8 +15,6 @@ enum AttributeType {
     NUMERICAL, 
     CATEGORICAL 
 };
-
-extern unordered_map<string, AttributeType> attribute_value_types; // declared in main.cpp
 struct DataPoint
 {
     string class_label;
@@ -28,6 +26,7 @@ class DecisionTree
     Node * root;
     int max_depth;
     bool pruning_enabled = true; // whether to enable pruning or not
+    unordered_map<string, AttributeType> attribute_value_types;
     // Function pointer for attribute selection strategy
     double (DecisionTree::*attribute_selection_strategy)(const vector<DataPoint> &, const string &);
 
@@ -51,7 +50,7 @@ class DecisionTree
     double partition_entropy(const unordered_map<string, int> & partition, double total_size);
     pair<double, double> get_best_split_value_and_gain(const vector<DataPoint> & data, const string & attribute);
     public:
-    DecisionTree(int max_depth = 5, string selection_strategy = "ig") : root(nullptr), max_depth(max_depth) {
+    DecisionTree(int max_depth, string selection_strategy, unordered_map<string, AttributeType> attribute_value_types): root(nullptr), max_depth(max_depth) {
         if(selection_strategy == "ig") attribute_selection_strategy = &DecisionTree::information_gain;
         else if(selection_strategy == "igr") attribute_selection_strategy = &DecisionTree::information_gain_ratio;
         else if(selection_strategy == "nwig") attribute_selection_strategy = &DecisionTree::normalized_weighted_information_gain;
@@ -64,6 +63,7 @@ class DecisionTree
         {
             pruning_enabled = false;
         }
+        this->attribute_value_types = attribute_value_types; // Initialize attribute value types
     }
     ~DecisionTree() 
     {
