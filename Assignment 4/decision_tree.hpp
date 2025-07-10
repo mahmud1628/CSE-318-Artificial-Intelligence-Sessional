@@ -371,7 +371,24 @@ double DecisionTree::information_gain_ratio(const vector<DataPoint> & data, cons
 {
     if(attribute_value_types[attribute] == NUMERICAL)
     {
-        return information_gain(data, attribute); // For now, using information gain directly for simplicity.
+        auto [value, gain] = get_best_split_value_and_gain(data, attribute);
+        int left_subset_size = 0, right_subset_size = 0;
+        for(const auto & point : data)
+        {
+            try
+            {
+                double attribute_value = stod(point.attribute_values.at(attribute));
+                if(attribute_value < value) left_subset_size++;
+                else right_subset_size++;
+            }
+            catch (...) {} // skip points with invalid numeric values
+        }
+        if(left_subset_size == 0 || right_subset_size == 0) return 0.0; // Avoid division by zero if no split is possible
+        double left_size_ratio = static_cast<double>(left_subset_size) / data.size();
+        double right_size_ratio = static_cast<double>(right_subset_size) / data.size();
+        double intrinsic_value = - (left_size_ratio * log2(left_size_ratio) + right_size_ratio * log2(right_size_ratio));
+        if(intrinsic_value == 0) return 0.0; // Avoid division by zero
+        return gain / intrinsic_value; // Return information gain ratio
     }
     double total_entropy = entropy(data);
     unordered_map<string, vector<DataPoint>> subsets;
