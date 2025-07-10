@@ -38,6 +38,8 @@ class DecisionTree
 
 
     void print_tree(Node * node, int depth);
+    int get_tree_depth_helper(Node * node);
+    int get_tree_size_helper(Node * node);
 
     // selection criteria
     double entropy(const vector<DataPoint> & data);
@@ -71,6 +73,8 @@ class DecisionTree
     bool train(const vector<DataPoint> & data, const vector<string> & attrributes);
     string predict(const DataPoint & point);
     void print();
+    int get_tree_depth();
+    int get_tree_size();
 };
 
 bool DecisionTree::train(const vector<DataPoint> & data, const vector<string> & attributes)
@@ -544,6 +548,40 @@ void DecisionTree::print_tree(Node* node, int tree_depth)
 void DecisionTree::print()
 {
     print_tree(root, 0);
+}
+
+int DecisionTree::get_tree_depth_helper(Node * node)
+{
+    if (node == nullptr) return 0;
+    if (node->is_leaf) return node->current_depth;
+    
+    int depth = 0;
+    for (const auto & child : node->children)
+    {
+        depth = max(depth, get_tree_depth_helper(child.second));
+    }
+    return depth;
+}
+
+int DecisionTree::get_tree_size_helper(Node * node)
+{
+    if (node == nullptr) return 0;
+    int size = 1; // Count the current node
+    for (const auto & child : node->children)
+    {
+        size += get_tree_size_helper(child.second); // Recursively count child nodes
+    }
+    return size;
+}
+
+int DecisionTree::get_tree_depth()
+{
+    return get_tree_depth_helper(root);
+}
+
+int DecisionTree::get_tree_size()
+{
+    return get_tree_size_helper(root);
 }
 
 
